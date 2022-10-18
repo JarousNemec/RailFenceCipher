@@ -5,23 +5,21 @@ namespace RailFenceCipher
 {
     public class RailFenceProcessor
     {
+        #region Graphics solution
+
         private char[,] _railFence;
         private Point _cursor;
         private Direction _direction;
 
-        public RailFenceProcessor()
-        {
-        }
-
-        public string Encode(string toEncode, int key)
+        public string GraphicsEncode(string toEncode, int key)
         {
             if (key <= 1 || key >= toEncode.Length)
                 return "Wrong key";
-            
-            Initialize(toEncode, key);
-            
+
+            toEncode = Initialize(toEncode, key);
+
             PutEachCharToArrayByDiagonal(toEncode);
-            
+
             return ReadCipherFromArrayByRailFenceRules();
         }
 
@@ -50,7 +48,7 @@ namespace RailFenceCipher
             }
         }
 
-        private void PrintArray()
+        public void PrintArray()
         {
             for (int y = 0; y < _railFence.GetLength(0); y++)
             {
@@ -58,17 +56,24 @@ namespace RailFenceCipher
                 {
                     Console.Write(_railFence[y, x]);
                 }
+
                 Console.WriteLine();
                 for (int x = 0; x < _railFence.GetLength(1); x++)
                 {
                     Console.Write('-');
                 }
+
                 Console.WriteLine();
             }
         }
 
-        private void Initialize(string toEncode, int key)
+        private string Initialize(string toEncode, int key)
         {
+            int x = (int)toEncode.Length / key;
+            int y = Equation(key, toEncode.Length, x);
+            if (y > 0)
+                toEncode += new string('X', y);
+
             _railFence = new char[key, toEncode.Length];
             for (int i = 0; i < _railFence.GetLength(0); i++)
             {
@@ -76,11 +81,12 @@ namespace RailFenceCipher
                 {
                     _railFence[i, j] = Char.MinValue;
                 }
-
-                Console.WriteLine();
             }
+
             _cursor = new Point(0, 0);
             _direction = Direction.RightDown;
+
+            return toEncode;
         }
 
         private void NextStep()
@@ -122,14 +128,14 @@ namespace RailFenceCipher
             }
         }
 
-        public string Decode(string toDecode, int key)
+        public string GraphicsDecode(string toDecode, int key)
         {
             if (key <= 1 || key >= toDecode.Length)
                 return "Wrong key";
-            
+
             //put substitute chars to highlight the places where will be chars from encoded text
             PutSubstituteChars(toDecode, key);
-            
+
             //put chars from encoded text to highlight places by lines to read to decode by RailFence rules
             ReplaceSubstituteChars(toDecode);
 
@@ -175,5 +181,77 @@ namespace RailFenceCipher
             Initialize(substituteChars, key);
             PutEachCharToArrayByDiagonal(substituteChars);
         }
+
+        #endregion
+
+        #region Math solution
+
+        private Interval _interval;
+
+        public string MathEncode(string text, int key)
+        {
+            if (key > text.Length)
+                return "Wrong key";
+
+            _interval = new Interval();
+            string output = String.Empty;
+
+            int x = (int)text.Length / (key-1);
+            int y = Equation(key, text.Length, x);
+            text += new string('x', y);
+            //Console.WriteLine(text);
+            
+            for (int i = 0; i < key; i++)
+            {
+                _interval.SetInterval(
+                    new[] { _interval.GetIntervalOnLine(key - i-1), _interval.GetIntervalOnLine(i) }); 
+            
+                int count = 0;
+                int finalCount = GetFinalCount(text.Length, x, i);
+                for (int j = i; count < finalCount && output.Length < text.Length; j++)
+                {
+                    Console.WriteLine(j + " - interval "+_interval);
+                    output += text[j];
+                    int interval = _interval.GetInterval();
+                    j += interval;
+                    count++;
+                }
+            }
+
+            return output;
+        }
+
+        private int GetFinalCount(int lenght, int diagonalsCount, int index)
+        {
+            if (index == 0 || index == lenght - 1)
+            {
+                if (index == 0)
+                {
+                    return (diagonalsCount % 2) == 0 ? diagonalsCount : diagonalsCount - 1;
+                }
+                return (diagonalsCount % 2) != 0 ? diagonalsCount : diagonalsCount - 1;
+            }
+
+            return diagonalsCount;
+        }
+
+        private int Equation(int n, int l, int x)
+        {
+            int y = n + (n - 1) * x - l;
+            return y;
+        }
+
+        public string MathDecode(string text, int key)
+        {
+            int[] forDecodingPurposes = new int[text.Length];
+            for (int i = 0; i < forDecodingPurposes.Length; i++)
+            {
+                forDecodingPurposes[i] = i;
+            }
+
+            return "";
+        }
+        
+        #endregion
     }
 }
