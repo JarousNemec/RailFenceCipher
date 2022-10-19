@@ -50,15 +50,23 @@ namespace RailFenceCipher
 
         public void PrintArray()
         {
+            Console.Write("  ");
+            for (int i = 0; i < _railFence.GetLength(1); i++)
+            {
+                Console.Write(i);
+            }
+
+            Console.WriteLine();
             for (int y = 0; y < _railFence.GetLength(0); y++)
             {
+                Console.Write(y+" ");
                 for (int x = 0; x < _railFence.GetLength(1); x++)
                 {
                     Console.Write(_railFence[y, x]);
                 }
 
                 Console.WriteLine();
-                for (int x = 0; x < _railFence.GetLength(1); x++)
+                for (int x = 0; x < _railFence.GetLength(1)+2; x++)
                 {
                     Console.Write('-');
                 }
@@ -186,38 +194,45 @@ namespace RailFenceCipher
 
         #region Math solution
 
-        private Interval _interval;
+        private OrderedPair _orderedPair;
 
         public string MathEncode(string text, int key)
         {
-            if (key > text.Length)
+            var x = text.Length / (key);
+            if (text.Length % (key) != 0) x++;
+            var y = Equation(key, text.Length, x);
+            text += new string('x', y);
+            
+
+            if (key >= text.Length)
                 return "Wrong key";
 
-            _interval = new Interval();
-            string output = String.Empty;
+            _orderedPair = new OrderedPair();
+            var output = string.Empty;
 
-            int x = (int)text.Length / (key - 1);
-            int y = Equation(key, text.Length, x);
-            text += new string('x', y);
-            //Console.WriteLine(text);
-
-            for (int i = 0; i < key; i++)
+            for (var i = 0; i < key; i++)
             {
-                _interval.SetInterval(
-                    new[] { _interval.GetIntervalOnLine(key - i - 1), _interval.GetIntervalOnLine(i) });
+                _orderedPair.SetInterval(
+                    new[] { _orderedPair.GetSpace(key, i, 0), _orderedPair.GetSpace(key, i, 1) });
 
-                int count = 0;
-                int finalCount = GetFinalCount(key, x, i);
-                Console.WriteLine(finalCount);
-                // for (int j = i; count < finalCount && output.Length < text.Length; j++)
-                // {
-                //     // Console.WriteLine(j + " - interval " + _interval);
-                //     output += text[j];
-                //     Console.WriteLine(new string('+',j));
-                //     int interval = _interval.GetInterval();
-                //     j += interval;
-                //     count++;
-                // }
+                var pos = i;
+                var finalCount = GetFinalCount(key, x, i);
+                //Console.WriteLine(i + " - " + finalCount);
+                for (var count = 0; count < finalCount; count++)
+                {
+                    var orderedPair = _orderedPair.GetOrderedPair();
+                    //Console.WriteLine( $"{pos} - interval+1:{orderedPair+1} interval:{orderedPair}");
+                    //Console.WriteLine(pos+" = "+text[pos]+" - "+orderedPair);
+                    if (orderedPair == 0)
+                        orderedPair = _orderedPair.GetOrderedPair();
+                    if (x == 2)
+                    {
+                        orderedPair = _orderedPair.Intervals[0];
+                    }
+
+                    output += text[pos];
+                    pos += orderedPair;
+                }
             }
 
             return output;
@@ -225,25 +240,39 @@ namespace RailFenceCipher
 
         private int GetFinalCount(int lenght, int diagonalsCount, int index)
         {
-            int output = 0;
-            if (index == 0 || index == lenght - 1)
+            if (index > 0 && index < lenght - 1)
             {
-                if (index == 0)
+                return diagonalsCount;
+            }
+
+            if (index == 0)
+            {
+                var count = 1;
+                for (var i = 1; i <= diagonalsCount; i++)
                 {
-                    double temp = ((diagonalsCount % 2) == 0 ? (diagonalsCount / 2) * 1.5 : diagonalsCount / 2);
-                    output = temp % 2 == 0 ? (int)temp+1 : (int)temp;
-                }
-                else
-                {
-                    output = ((diagonalsCount % 2) == 0 ? diagonalsCount / 2 : diagonalsCount / 2 + 1);
+                    if (count >= diagonalsCount)
+                    {
+                        return i;
+                    }
+
+                    count += 2;
                 }
             }
-            else
+            else if (index == lenght - 1)
             {
-                output = diagonalsCount;
+                var count = 0;
+                for (var i = 0; i <= diagonalsCount; i++)
+                {
+                    if (count >= diagonalsCount)
+                    {
+                        return i;
+                    }
+
+                    count += 2;
+                }
             }
-            
-            return (int)output;
+
+            return 0;
         }
 
         private int Equation(int n, int l, int x)
@@ -254,13 +283,21 @@ namespace RailFenceCipher
 
         public string MathDecode(string text, int key)
         {
-            int[] forDecodingPurposes = new int[text.Length];
-            for (int i = 0; i < forDecodingPurposes.Length; i++)
+            char[] forDecodingPurposes = new char[text.Length];
+            for (var i = 0; i < forDecodingPurposes.Length; i++)
             {
-                forDecodingPurposes[i] = i;
+                forDecodingPurposes[i] = (char)(i+64);
             }
 
-            return "";
+            char[] output = new char[text.Length];
+            char[] order = MathEncode(new string(forDecodingPurposes), key).ToCharArray();
+            for (int i = 0; i < order.Length; i++)
+            {
+                int pos = order[i]-64;
+                output[pos] = text[i];
+            }
+
+            return new string(output);
         }
 
         #endregion

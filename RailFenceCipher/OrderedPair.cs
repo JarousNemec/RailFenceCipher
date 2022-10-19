@@ -2,18 +2,18 @@
 
 namespace RailFenceCipher
 {
-    public class Interval
+    public class OrderedPair
     {
         public int[] Intervals { get; set; }
 
         public int ActualIntervalIndex { get; set; }
 
-        public Interval()
+        public OrderedPair()
         {
             ActualIntervalIndex = 0;
         }
 
-        public int GetInterval()
+        public int GetOrderedPair()
         {
             if (ActualIntervalIndex < Intervals.Length)
             {
@@ -26,38 +26,44 @@ namespace RailFenceCipher
 
         public void SetInterval(int[] intervals)
         {
-            if (intervals[0]<0)
+            ActualIntervalIndex = 0;
+            if (intervals[0] < 0)
             {
                 intervals[0] = 0;
             }
-            if (intervals[1]<0)
+
+            if (intervals[1] < 0)
             {
                 intervals[1] = 0;
             }
+
             Intervals = intervals;
         }
 
         public override string ToString()
         {
-            // foreach (var interval in Intervals)
-            // {
-            //     Console.WriteLine(interval);
-            // }
-            //
-            // Console.WriteLine("---------------");
             return $"{Intervals[0]} {Intervals[1]}";
         }
 
-        public int GetIntervalOnLine(int line)
+        public int GetSpace(int key, int index, int order)
         {
-            int interval = -1;
-
-            for (int i = 0; i < line; i++)
+            int x = 2 * key - 2;
+            if (index == 0 || index == key - 1)
             {
-                interval += 2;
+                if (order == 0)
+                {
+                    return x;
+                }
+
+                return 0;
             }
 
-            return interval;
+            if (order == 0)
+            {
+                return x - index * 2;
+            }
+
+            return index * 2;
         }
     }
 }
