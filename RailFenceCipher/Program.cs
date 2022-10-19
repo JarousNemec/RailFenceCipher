@@ -7,8 +7,8 @@ namespace RailFenceCipher
         static void Main(string[] args)
         {
             var processor = new RailFenceProcessor();
-            string text = "ahoj_pepo_a";
-            int key = 4;
+            string text = "ahoj_pepo";
+            int key = 3;
              var encode = processor.GraphicsEncode(text,key);
             processor.PrintArray();
               //var decode = processor.GraphicsDecode(encode, key);

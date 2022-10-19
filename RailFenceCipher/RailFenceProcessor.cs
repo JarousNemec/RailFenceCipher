@@ -196,26 +196,28 @@ namespace RailFenceCipher
             _interval = new Interval();
             string output = String.Empty;
 
-            int x = (int)text.Length / (key-1);
+            int x = (int)text.Length / (key - 1);
             int y = Equation(key, text.Length, x);
             text += new string('x', y);
             //Console.WriteLine(text);
-            
+
             for (int i = 0; i < key; i++)
             {
                 _interval.SetInterval(
-                    new[] { _interval.GetIntervalOnLine(key - i-1), _interval.GetIntervalOnLine(i) }); 
-            
+                    new[] { _interval.GetIntervalOnLine(key - i - 1), _interval.GetIntervalOnLine(i) });
+
                 int count = 0;
-                int finalCount = GetFinalCount(text.Length, x, i);
-                for (int j = i; count < finalCount && output.Length < text.Length; j++)
-                {
-                    Console.WriteLine(j + " - interval "+_interval);
-                    output += text[j];
-                    int interval = _interval.GetInterval();
-                    j += interval;
-                    count++;
-                }
+                int finalCount = GetFinalCount(key, x, i);
+                Console.WriteLine(finalCount);
+                // for (int j = i; count < finalCount && output.Length < text.Length; j++)
+                // {
+                //     // Console.WriteLine(j + " - interval " + _interval);
+                //     output += text[j];
+                //     Console.WriteLine(new string('+',j));
+                //     int interval = _interval.GetInterval();
+                //     j += interval;
+                //     count++;
+                // }
             }
 
             return output;
@@ -223,16 +225,25 @@ namespace RailFenceCipher
 
         private int GetFinalCount(int lenght, int diagonalsCount, int index)
         {
+            int output = 0;
             if (index == 0 || index == lenght - 1)
             {
                 if (index == 0)
                 {
-                    return (diagonalsCount % 2) == 0 ? diagonalsCount : diagonalsCount - 1;
+                    double temp = ((diagonalsCount % 2) == 0 ? (diagonalsCount / 2) * 1.5 : diagonalsCount / 2);
+                    output = temp % 2 == 0 ? (int)temp+1 : (int)temp;
                 }
-                return (diagonalsCount % 2) != 0 ? diagonalsCount : diagonalsCount - 1;
+                else
+                {
+                    output = ((diagonalsCount % 2) == 0 ? diagonalsCount / 2 : diagonalsCount / 2 + 1);
+                }
             }
-
-            return diagonalsCount;
+            else
+            {
+                output = diagonalsCount;
+            }
+            
+            return (int)output;
         }
 
         private int Equation(int n, int l, int x)
@@ -251,7 +262,7 @@ namespace RailFenceCipher
 
             return "";
         }
-        
+
         #endregion
     }
 }
